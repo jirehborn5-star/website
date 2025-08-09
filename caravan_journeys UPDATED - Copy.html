@@ -4786,6 +4786,67 @@
 
 /* Map markers */
 
+.map-marker {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background-color: var(--accent);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 5;
+}
+
+.map-marker::after {
+  content: "";
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background-color: white;
+  border-radius: 50%;
+  top: 8px;
+  left: 8px;
+  transition: all 0.3s ease;
+}
+
+.map-marker:hover {
+  transform: rotate(-45deg) scale(1.3);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+}
+
+.map-marker:hover::after {
+  background-color: #f5f5f5;
+}
+
+.map-marker.active {
+  animation: bounceIn 0.6s cubic-bezier(0.215, 0.610, 0.355, 1.000);
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: rotate(-45deg) scale(0.3);
+  }
+  20% {
+    transform: rotate(-45deg) scale(1.1);
+  }
+  40% {
+    transform: rotate(-45deg) scale(0.9);
+  }
+  60% {
+    opacity: 1;
+    transform: rotate(-45deg) scale(1.03);
+  }
+  80% {
+    transform: rotate(-45deg) scale(0.97);
+  }
+  100% {
+    transform: rotate(-45deg) scale(1);
+  }
+}
+
 /* Location popup styles */
 .location-popup {
   position: fixed;
@@ -6438,6 +6499,10 @@ let markerLayer;
 function initDiscoverMap() {
   if (discoverMap) {
     discoverMap.invalidateSize();
+    const active = document.querySelector('.country-tab.active');
+    if (active) {
+      createMapMarkers(active.getAttribute('data-country'));
+    }
     return;
   }
 
@@ -6458,7 +6523,8 @@ function initDiscoverMap() {
         lat: 35.6892523,
         lng: 51.3896004,
         image: '/api/placeholder/500/300',
-        description: 'Iran\'s capital and largest city, Tehran is home to grand palaces, historic museums, and vibrant bazaars. Visit the UNESCO-listed Golestan Palace, National Museum, and the Treasury of National Jewels.'
+        description: 'Iran\'s capital and largest city, Tehran is home to grand palaces, historic museums, and vibrant bazaars. Visit the UNESCO-listed Golestan Palace, National Museum, and the Treasury of National Jewels.',
+        url: '#tehran'
       },
       {
         id: 'isfahan',
@@ -6466,7 +6532,8 @@ function initDiscoverMap() {
         lat: 32.6707877,
         lng: 51.6650002,
         image: '/api/placeholder/500/300',
-        description: 'Known for stunning Persian-Islamic architecture centered around Naqsh-e Jahan Square. The city features magnificent mosques, palaces, and historic bridges spanning the Zayandeh River.'
+        description: 'Known for stunning Persian-Islamic architecture centered around Naqsh-e Jahan Square. The city features magnificent mosques, palaces, and historic bridges spanning the Zayandeh River.',
+        url: '#isfahan'
       },
       {
         id: 'shiraz',
@@ -6474,7 +6541,8 @@ function initDiscoverMap() {
         lat: 29.6060218,
         lng: 52.5378041,
         image: '/api/placeholder/500/300',
-        description: 'The city of poets, gardens, and wine. Explore the Pink Mosque with its stunning stained glass, the tombs of Hafez and Saadi, and beautiful Persian gardens like Eram Garden.'
+        description: 'The city of poets, gardens, and wine. Explore the Pink Mosque with its stunning stained glass, the tombs of Hafez and Saadi, and beautiful Persian gardens like Eram Garden.',
+        url: '#shiraz'
       },
       {
         id: 'persepolis',
@@ -6482,7 +6550,8 @@ function initDiscoverMap() {
         lat: 29.9351669,
         lng: 52.8904041,
         image: '/api/placeholder/500/300',
-        description: 'The ceremonial capital of the ancient Achaemenid Empire. This UNESCO World Heritage site features grand staircases, imposing gateways, and detailed reliefs depicting nations of the empire.'
+        description: 'The ceremonial capital of the ancient Achaemenid Empire. This UNESCO World Heritage site features grand staircases, imposing gateways, and detailed reliefs depicting nations of the empire.',
+        url: '#persepolis'
       },
       {
         id: 'yazd',
@@ -6490,7 +6559,8 @@ function initDiscoverMap() {
         lat: 31.8974,
         lng: 54.3569,
         image: '/api/placeholder/500/300',
-        description: 'An ancient desert city known for its unique wind-catchers (badgirs), Zoroastrian fire temples, and traditional earthen architecture.'
+        description: 'An ancient desert city known for its unique wind-catchers (badgirs), Zoroastrian fire temples, and traditional earthen architecture.',
+        url: '#yazd'
       }
     ],
     afghanistan: [
@@ -6500,7 +6570,8 @@ function initDiscoverMap() {
         lat: 34.5266431,
         lng: 69.1849082,
         image: '/api/placeholder/500/300',
-        description: 'Afghanistan\'s capital city. Visit the Gardens of Babur, the historic Kabul Museum, and explore the vibrant bazaars showcasing Afghan crafts and heritage.'
+        description: 'Afghanistan\'s capital city. Visit the Gardens of Babur, the historic Kabul Museum, and explore the vibrant bazaars showcasing Afghan crafts and heritage.',
+        url: '#kabul'
       },
       {
         id: 'bamiyan',
@@ -6508,7 +6579,8 @@ function initDiscoverMap() {
         lat: 34.821,
         lng: 67.8257,
         image: '/api/placeholder/500/300',
-        description: 'Home to the niches of the Giant Buddhas and Band-e Amir lakes, with turquoise waters contrasting dramatically with the surrounding desert landscape.'
+        description: 'Home to the niches of the Giant Buddhas and Band-e Amir lakes, with turquoise waters contrasting dramatically with the surrounding desert landscape.',
+        url: '#bamiyan'
       },
       {
         id: 'herat',
@@ -6516,7 +6588,8 @@ function initDiscoverMap() {
         lat: 34.3491443,
         lng: 62.2163252,
         image: '/api/placeholder/500/300',
-        description: 'A historic city near the Iranian border featuring the magnificent Friday Mosque with intricate tile work, ancient citadel, and traditional bazaars.'
+        description: 'A historic city near the Iranian border featuring the magnificent Friday Mosque with intricate tile work, ancient citadel, and traditional bazaars.',
+        url: '#herat'
       },
       {
         id: 'mazarisharif',
@@ -6524,7 +6597,8 @@ function initDiscoverMap() {
         lat: 36.7090366,
         lng: 67.1114085,
         image: '/api/placeholder/500/300',
-        description: 'Known for the stunning Blue Mosque (Shrine of Hazrat Ali) with its distinctive blue tiles and architecture, and vibrant bazaars.'
+        description: 'Known for the stunning Blue Mosque (Shrine of Hazrat Ali) with its distinctive blue tiles and architecture, and vibrant bazaars.',
+        url: '#mazarisharif'
       },
       {
         id: 'balkh',
@@ -6532,7 +6606,8 @@ function initDiscoverMap() {
         lat: 36.7581299,
         lng: 66.8979753,
         image: '/api/placeholder/500/300',
-        description: 'An ancient city once known as "Mother of Cities," featuring ruins of ancient civilizations including Greco-Bactrian sites.'
+        description: 'An ancient city once known as "Mother of Cities," featuring ruins of ancient civilizations including Greco-Bactrian sites.',
+        url: '#balkh'
       }
     ],
     syria: [],
@@ -6548,7 +6623,20 @@ function initDiscoverMap() {
     }
 
     locationData[country].forEach(location => {
-      const marker = L.marker([location.lat, location.lng]).addTo(markerLayer);
+      const marker = L.marker([location.lat, location.lng], {
+        icon: L.divIcon({
+          className: 'map-marker',
+          iconSize: [30, 30],
+          iconAnchor: [15, 30]
+        })
+      }).addTo(markerLayer);
+
+      marker.on('add', function() {
+        if (this._icon) {
+          this._icon.classList.add('active');
+        }
+      });
+
       marker.on('click', () => {
         showLocationPopup(location);
       });
@@ -6567,11 +6655,13 @@ function showLocationPopup(location) {
   const image = document.getElementById('popup-image');
   const title = document.getElementById('popup-title');
   const description = document.getElementById('popup-description');
+  const learnMore = document.getElementById('popup-learn-more');
   
   // Set popup content
   if (image) image.src = location.image;
   if (title) title.textContent = location.name;
   if (description) description.textContent = location.description;
+  if (learnMore) learnMore.href = location.url || '#';
   
   // Show popup with improved animation
   if (popup) {
