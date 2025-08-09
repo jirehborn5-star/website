@@ -7,6 +7,8 @@
 <title>Caravan Journeys - Bespoke Travel Experiences</title>
 <!-- Font Awesome for icons -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-sA+e5H6Ryxbl1pNGdisz8Iky3Uczdlz7YT1P4gkG0L0=" crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-oRYg9ofu2wVXLSf/6Fy7jH9MuNoMNFk13JUO2c+hJ1w=" crossorigin=""></script>
 <style>
     :root {
       --primary: #2a4365;  /* dark blue */
@@ -4710,13 +4712,7 @@
 #discover-map {
   width: 100%;
   height: 100%;
-  background-color: #e2e9f3;
   position: relative;
-  overflow: hidden;
-  background-image: url('/api/placeholder/1000/600');
-  background-size: cover;
-  background-position: center;
-  box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.2);
 }
 
 /* Add this enhanced map overlay style */
@@ -4789,72 +4785,6 @@
 }
 
 /* Map markers */
-.map-marker {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  background-color: var(--accent);
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-  display: none;
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  z-index: 5;
-}
-
-.map-marker::after {
-  content: "";
-  position: absolute;
-  width: 14px;
-  height: 14px;
-  background-color: white;
-  border-radius: 50%;
-  top: 8px;
-  left: 8px;
-  transition: all 0.3s ease;
-}
-
-.map-marker:hover {
-  transform: rotate(-45deg) scale(1.3);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-}
-
-.map-marker:hover::after {
-  background-color: #f5f5f5;
-}
-
-.map-marker.active {
-  display: block;
-  animation: bounceIn 0.6s cubic-bezier(0.215, 0.610, 0.355, 1.000);
-}
-
-@keyframes bounceIn {
-  0%, 20%, 40%, 60%, 80%, 100% {
-    animation-timing-function: cubic-bezier(0.215, 0.610, 0.355, 1.000);
-  }
-  0% {
-    opacity: 0;
-    transform: rotate(-45deg) scale(0.3);
-  }
-  20% {
-    transform: rotate(-45deg) scale(1.1);
-  }
-  40% {
-    transform: rotate(-45deg) scale(0.9);
-  }
-  60% {
-    opacity: 1;
-    transform: rotate(-45deg) scale(1.03);
-  }
-  80% {
-    transform: rotate(-45deg) scale(0.97);
-  }
-  100% {
-    opacity: 1;
-    transform: rotate(-45deg) scale(1);
-  }
-}
 
 /* Location popup styles */
 .location-popup {
@@ -6502,89 +6432,105 @@ function initTripPlanner() {
 </script>
 <script>
 // Discover page functionality
+let discoverMap;
+let markerLayer;
+
 function initDiscoverMap() {
+  if (discoverMap) {
+    discoverMap.invalidateSize();
+    return;
+  }
+
+  discoverMap = L.map('discover-map').setView([32.4279, 53.6880], 5);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(discoverMap);
+
+  markerLayer = L.layerGroup().addTo(discoverMap);
+
   // Location data for markers
   const locationData = {
     iran: [
-      { 
-        id: 'tehran', 
-        name: 'Tehran', 
-        top: '25%', 
-        left: '45%', 
+      {
+        id: 'tehran',
+        name: 'Tehran',
+        lat: 35.6892523,
+        lng: 51.3896004,
         image: '/api/placeholder/500/300',
         description: 'Iran\'s capital and largest city, Tehran is home to grand palaces, historic museums, and vibrant bazaars. Visit the UNESCO-listed Golestan Palace, National Museum, and the Treasury of National Jewels.'
       },
-      { 
-        id: 'isfahan', 
-        name: 'Isfahan', 
-        top: '45%', 
-        left: '50%', 
+      {
+        id: 'isfahan',
+        name: 'Isfahan',
+        lat: 32.6707877,
+        lng: 51.6650002,
         image: '/api/placeholder/500/300',
         description: 'Known for stunning Persian-Islamic architecture centered around Naqsh-e Jahan Square. The city features magnificent mosques, palaces, and historic bridges spanning the Zayandeh River.'
       },
-      { 
-        id: 'shiraz', 
-        name: 'Shiraz', 
-        top: '65%', 
-        left: '52%', 
+      {
+        id: 'shiraz',
+        name: 'Shiraz',
+        lat: 29.6060218,
+        lng: 52.5378041,
         image: '/api/placeholder/500/300',
         description: 'The city of poets, gardens, and wine. Explore the Pink Mosque with its stunning stained glass, the tombs of Hafez and Saadi, and beautiful Persian gardens like Eram Garden.'
       },
-      { 
-        id: 'persepolis', 
-        name: 'Persepolis', 
-        top: '68%', 
-        left: '57%', 
+      {
+        id: 'persepolis',
+        name: 'Persepolis',
+        lat: 29.9351669,
+        lng: 52.8904041,
         image: '/api/placeholder/500/300',
         description: 'The ceremonial capital of the ancient Achaemenid Empire. This UNESCO World Heritage site features grand staircases, imposing gateways, and detailed reliefs depicting nations of the empire.'
       },
-      { 
-        id: 'yazd', 
-        name: 'Yazd', 
-        top: '47%', 
-        left: '60%', 
+      {
+        id: 'yazd',
+        name: 'Yazd',
+        lat: 31.8974,
+        lng: 54.3569,
         image: '/api/placeholder/500/300',
         description: 'An ancient desert city known for its unique wind-catchers (badgirs), Zoroastrian fire temples, and traditional earthen architecture.'
       }
     ],
     afghanistan: [
-      { 
-        id: 'kabul', 
-        name: 'Kabul', 
-        top: '35%', 
-        left: '45%', 
+      {
+        id: 'kabul',
+        name: 'Kabul',
+        lat: 34.5266431,
+        lng: 69.1849082,
         image: '/api/placeholder/500/300',
         description: 'Afghanistan\'s capital city. Visit the Gardens of Babur, the historic Kabul Museum, and explore the vibrant bazaars showcasing Afghan crafts and heritage.'
       },
-      { 
-        id: 'bamiyan', 
-        name: 'Bamiyan Valley', 
-        top: '40%', 
-        left: '30%', 
+      {
+        id: 'bamiyan',
+        name: 'Bamiyan Valley',
+        lat: 34.821,
+        lng: 67.8257,
         image: '/api/placeholder/500/300',
         description: 'Home to the niches of the Giant Buddhas and Band-e Amir lakes, with turquoise waters contrasting dramatically with the surrounding desert landscape.'
       },
-      { 
-        id: 'herat', 
-        name: 'Herat', 
-        top: '30%', 
-        left: '15%', 
+      {
+        id: 'herat',
+        name: 'Herat',
+        lat: 34.3491443,
+        lng: 62.2163252,
         image: '/api/placeholder/500/300',
         description: 'A historic city near the Iranian border featuring the magnificent Friday Mosque with intricate tile work, ancient citadel, and traditional bazaars.'
       },
-      { 
-        id: 'mazarisharif', 
-        name: 'Mazar-i-Sharif', 
-        top: '20%', 
-        left: '40%', 
+      {
+        id: 'mazarisharif',
+        name: 'Mazar-i-Sharif',
+        lat: 36.7090366,
+        lng: 67.1114085,
         image: '/api/placeholder/500/300',
         description: 'Known for the stunning Blue Mosque (Shrine of Hazrat Ali) with its distinctive blue tiles and architecture, and vibrant bazaars.'
       },
-      { 
-        id: 'balkh', 
-        name: 'Balkh', 
-        top: '18%', 
-        left: '35%', 
+      {
+        id: 'balkh',
+        name: 'Balkh',
+        lat: 36.7581299,
+        lng: 66.8979753,
         image: '/api/placeholder/500/300',
         description: 'An ancient city once known as "Mother of Cities," featuring ruins of ancient civilizations including Greco-Bactrian sites.'
       }
@@ -6595,36 +6541,24 @@ function initDiscoverMap() {
 
   // Create map markers based on country selection
   function createMapMarkers(country) {
-    // Clear existing markers
-    document.querySelectorAll('.map-marker').forEach(marker => marker.remove());
-    
-    // Exit if no location data (Coming Soon countries)
+    markerLayer.clearLayers();
+
     if (!locationData[country] || locationData[country].length === 0) {
       return;
     }
-    
-    // Create map background based on country
-    const mapEl = document.getElementById('discover-map');
-    if (mapEl) {
-      mapEl.style.backgroundImage = `url('/api/placeholder/1000/600')`;
-    }
-    
-    // Create new markers for selected country
+
     locationData[country].forEach(location => {
-      const marker = document.createElement('div');
-      marker.className = 'map-marker active';
-      marker.setAttribute('data-location', location.id);
-      marker.style.top = location.top;
-      marker.style.left = location.left;
-      
-      // Add marker click event
-      marker.addEventListener('click', function() {
+      const marker = L.marker([location.lat, location.lng]).addTo(markerLayer);
+      marker.on('click', () => {
         showLocationPopup(location);
       });
-      
-      // Add to map
-      mapEl.appendChild(marker);
     });
+
+    if (markerLayer.getLayers().length === 1) {
+      discoverMap.setView(markerLayer.getLayers()[0].getLatLng(), 6);
+    } else {
+      discoverMap.fitBounds(markerLayer.getBounds(), { padding: [20, 20] });
+    }
   }
   
  // Show location popup with enhanced animation
@@ -6669,7 +6603,7 @@ function showLocationPopup(location) {
     
     // Close when clicking outside the popup (except markers)
     const outsideClickHandler = function(e) {
-      if (!popup.contains(e.target) && !e.target.classList.contains('map-marker')) {
+      if (!popup.contains(e.target) && !e.target.classList.contains('leaflet-marker-icon')) {
         // Remove active class to start fade out
         popup.classList.remove('active');
         
